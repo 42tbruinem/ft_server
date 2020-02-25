@@ -6,8 +6,6 @@ FROM debian:buster
 EXPOSE 80 443
 WORKDIR /root/
 
-ARG index=on
-
 #Install every piece of our modified LEMP stack we'll need.
 
 RUN apt-get -y update && \
@@ -65,7 +63,7 @@ RUN		wp cli update
 RUN		service mysql start && sudo -u admin -i wp core download && \
 		sudo -u admin -i wp core config --dbname=wordpress_db --dbuser=admin --dbpass=admin && \
 		sudo -u admin -i wp core install --url=https://localhost/ --title=WordPress \
-		--admin_user=admin --admin_password=admin --admin_email=thijsbruineman@gmail.com
+		--admin_user=admin --admin_password=admin --admin_email=admin@gmail.com
 RUN		cp -r /home/admin/. /var/www/html/wordpress
 RUN		chown -R www-data:www-data /var/www/html/*
 
@@ -73,7 +71,9 @@ RUN		chown -R www-data:www-data /var/www/html/*
 
 COPY	/srcs/localhost.cert /etc/ssl/certs/server.cert
 COPY	/srcs/localhost.key /etc/ssl/private/server.key
-COPY	/srcs/index_$index.conf /etc/nginx/sites-available/server.conf
+COPY	/srcs/server.conf /etc/nginx/sites-available/server.conf
+COPY	/srcs/switch_index.sh /
+RUN		chmod +x /switch_index.sh
 RUN		ln -s /etc/nginx/sites-available/server.conf /etc/nginx/sites-enabled/server.conf
 RUN		rm -rf /etc/nginx/sites-enabled/default
 COPY	/srcs/php.ini /etc/php/7.3/fpm/php.ini

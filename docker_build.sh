@@ -1,0 +1,1 @@
+docker build -t tbruinem/ft_server .
