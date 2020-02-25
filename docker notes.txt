@@ -1,7 +1,0 @@
--i means interactive, we are allowed to interact with the terminal within the container.
-RUN accesses the shell of the docker container.
-COPY (folder containing files to be copied) (folder to copy these files to)
-WORKDIR the starting directory of the container
-
-an image can not contain processes, only 'static' data such as files, therefor we have to start things seperately from constructing.
-EXPOSE: expose a port, so the container accepts incoming connections on it

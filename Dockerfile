@@ -30,13 +30,6 @@ RUN apt-get -y update && \
 	nginx \
 	libnss3-tools
 
-#Configuring NGINX
-
-#RUN		rm -rf /etc/nginx/sites-enabled/default
-#COPY	/srcs/index_on.conf /etc/nginx/sites-available
-#COPY	/srcs/index_off.conf /etc/nginx/sites-available
-#RUN		ln -s /etc/nginx/sites-available/index_[index]/ etc/nginx/sites-enabled/server.conf
-
 #Configuring PHPMyAdmin
 
 RUN		mkdir -p /var/www/html/wordpress
@@ -45,10 +38,12 @@ RUN		tar -zxvf /tmp/phpMyAdmin-4.9+snapshot-all-languages.tar.gz -C /tmp
 RUN		cp -r /tmp/phpMyAdmin-4.9+snapshot-all-languages/. \
 		/var/www/html/wordpress/phpmyadmin
 RUN		chmod a+rwx,g-w,o-w /var/www/html/wordpress/phpmyadmin/tmp
+COPY	/srcs/config.inc.php /var/www/html/wordpress/phpmyadmin
 
 #Creating the mysql database for Wordpress
 
-RUN		service mysql start && mysql -e "CREATE DATABASE wordpress_db;" && \
+RUN		service mysql start && mysql < /var/www/html/wordpress/phpmyadmin/sql/create_tables.sql && \
+		mysql -e "CREATE DATABASE wordpress_db;" && \	
 		mysql -e "CREATE USER 'admin'@'%' IDENTIFIED BY 'admin';" && \
 		mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION;" && \
 		mysql -e "FLUSH PRIVILEGES;"
@@ -74,20 +69,20 @@ RUN		service mysql start && sudo -u admin -i wp core download && \
 RUN		cp -r /home/admin/. /var/www/html/wordpress
 RUN		chown -R www-data:www-data /var/www/html/*
 
-COPY	/srcs/server.key /etc/ssl/private/
-COPY	/srcs/server.crt /etc/ssl/certs/
-COPY	/srcs/server.conf /etc/nginx/sites-enabled
-COPY	/srcs/server.conf /etc/nginx/sites-available
-COPY	/srcs/config.inc.php /var/www/html/wordpress/phpmyadmin
+#Copying all the required files from srcs/
+
+COPY	/srcs/localhost.cert /etc/ssl/certs/server.cert
+COPY	/srcs/localhost.key /etc/ssl/private/server.key
+COPY	/srcs/index_$index.conf /etc/nginx/sites-available/server.conf
+RUN		ln -s /etc/nginx/sites-available/server.conf /etc/nginx/sites-enabled/server.conf
+RUN		rm -rf /etc/nginx/sites-enabled/default
 COPY	/srcs/php.ini /etc/php/7.3/fpm/php.ini
 
 #Start all the services when starting our image
 
-#CMD 	service nginx start && \
-#		service mysql start && \
-#		mysql_secure_installation && \
-#		service apache2 start && \
-#		service php7.3-fpm start && \
-#		echo "127.0.0.1 localhost localhost.localdomain $(hostname)" >> /etc/hosts && \
-#		service sendmail start && \
-#		bash
+CMD 	service nginx start && \
+		service mysql start && \
+		service php7.3-fpm start && \
+		echo "127.0.0.1 localhost localhost.localdomain $(hostname)" >> /etc/hosts && \
+		service sendmail start && \
+		bash
