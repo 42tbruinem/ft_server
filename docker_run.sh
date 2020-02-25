@@ -1,0 +1,1 @@
+docker run -it -p80:80 -p443:443  tbruinem/ft_server
