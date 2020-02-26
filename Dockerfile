@@ -38,29 +38,37 @@ RUN		cp -r /tmp/phpMyAdmin-4.9+snapshot-all-languages/. \
 RUN		chmod a+rwx,g-w,o-w /var/www/html/wordpress/phpmyadmin/tmp
 COPY	/srcs/config.inc.php /var/www/html/wordpress/phpmyadmin
 
+#This line is necessarry for me at home (Windows) to prevent an error in phpmyadmin
+#It would say that phpmyadmin config is modifiable by world
+#RUN		chmod a+rwx,g-w,o-w /var/www/html/wordpress/phpmyadmin/config.inc.php
+
 #Creating the mysql database for Wordpress
 
-RUN		service mysql start && mysql < /var/www/html/wordpress/phpmyadmin/sql/create_tables.sql && \
+RUN		service mysql start && \
 		mysql -e "CREATE DATABASE wordpress_db;" && \	
 		mysql -e "CREATE USER 'admin'@'%' IDENTIFIED BY 'admin';" && \
 		mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION;" && \
 		mysql -e "FLUSH PRIVILEGES;"
 
-#Configuring super-user
-
-RUN		adduser --disabled-password --gecos "" admin
-RUN		sudo adduser admin sudo
-
-#Download and install wordpress-cli
+#Copy the Wordpress-CLI files and update it,
+#there has to be a database first.
 
 COPY	/srcs/wp-cli.phar /tmp/
 RUN		chmod a+rwx,g-w,o-w /tmp/wp-cli.phar
 RUN		mv /tmp/wp-cli.phar /usr/local/bin/wp
 RUN		wp cli update
 
-#Download and configure wordpress
+#Configuring super-user
+
+RUN		adduser --disabled-password --gecos "" admin
+RUN		sudo adduser admin sudo
+
+#Configure the Wordpress CLI.
+#Add all the data of the database (tables, user, etc..) to the phpmyadmin config
+#Make the www-data group owner of the files, Nginx will act as this group to carry out operations.
 
 RUN		service mysql start && sudo -u admin -i wp core download && \
+		mysql < /var/www/html/wordpress/phpmyadmin/sql/create_tables.sql && \
 		sudo -u admin -i wp core config --dbname=wordpress_db --dbuser=admin --dbpass=admin && \
 		sudo -u admin -i wp core install --url=https://localhost/ --title=WordPress \
 		--admin_user=admin --admin_password=admin --admin_email=admin@gmail.com
