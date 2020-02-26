@@ -2,7 +2,9 @@
 
 FROM debian:buster
 
-#Expose the port 80 because that's what wordpress will be loaded on.
+#Expose the port 80 for HTTP
+#Expose the port 443 for HTTPS
+
 EXPOSE 80 443
 WORKDIR /root/
 
@@ -40,6 +42,7 @@ COPY	/srcs/config.inc.php /var/www/html/wordpress/phpmyadmin
 
 #This line is necessarry for me at home (Windows) to prevent an error in phpmyadmin
 #It would say that phpmyadmin config is modifiable by world
+
 #RUN		chmod a+rwx,g-w,o-w /var/www/html/wordpress/phpmyadmin/config.inc.php
 
 #Creating the mysql database for Wordpress
