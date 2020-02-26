@@ -87,13 +87,16 @@ COPY	/srcs/switch_index.sh /
 RUN		chmod +x /switch_index.sh
 RUN		ln -s /etc/nginx/sites-available/server.conf /etc/nginx/sites-enabled/server.conf
 RUN		rm -rf /etc/nginx/sites-enabled/default
-COPY	/srcs/php.ini /etc/php/7.3/fpm/php.ini
+
+#Increase the maximum upload size in the php.ini
+
+RUN		sed -i '/upload_max_filesize/c upload_max_filesize = 20M' /etc/php/7.3/fpm/php.ini
+RUN		sed -i '/post_max_size/c post_max_size = 21M' /etc/php/7.3/fpm/php.ini
 
 #Start all the services when starting our image
 
-CMD 	service nginx start && \
-		service mysql start && \
+CMD		service mysql start && \
 		service php7.3-fpm start && \
 		echo "127.0.0.1 localhost localhost.localdomain $(hostname)" >> /etc/hosts && \
 		service sendmail start && \
-		bash
+		nginx -g "daemon off;"
