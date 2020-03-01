@@ -49,8 +49,8 @@ COPY	/srcs/config.inc.php /var/www/html/wordpress/phpmyadmin
 
 RUN		service mysql start && \
 		mysql -e "CREATE DATABASE wordpress_db;" && \	
-		mysql -e "CREATE USER 'admin'@'%' IDENTIFIED BY 'admin';" && \
-		mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%' WITH GRANT OPTION;" && \
+		mysql -e "CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';" && \
+		mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'admin'@'localhost' WITH GRANT OPTION;" && \
 		mysql -e "FLUSH PRIVILEGES;"
 
 #Copy the Wordpress-CLI files and update it,
@@ -95,8 +95,9 @@ RUN		sed -i '/post_max_size/c post_max_size = 21M' /etc/php/7.3/fpm/php.ini
 
 #Start all the services when starting our image
 
-CMD		service mysql start && \
+CMD		service nginx restart && \
+		service mysql start && \
 		service php7.3-fpm start && \
 		echo "127.0.0.1 localhost localhost.localdomain $(hostname)" >> /etc/hosts && \
 		service sendmail start && \
-		nginx -g "daemon off;"
+		bash
